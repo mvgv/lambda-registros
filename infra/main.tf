@@ -6,9 +6,9 @@ variable "TF_LAMBDA_ZIP_PATH" {
   type = string
 }
 
-resource "aws_lambda_function" "example" {
+resource "aws_lambda_function" "lambda-registros" {
   function_name = "lambda-registros"
-  role         = aws_iam_role.example.arn
+  role         = aws_iam_role.lambda-registros.arn
   handler      = "main"
   runtime      = "provided.al2023"
 
@@ -23,7 +23,7 @@ resource "aws_lambda_function" "example" {
 
 resource "aws_iam_role_policy" "lambda_exec_policy" {
   name = "crud-api-exec-role-policy"
-  role = aws_iam_role.example.id
+  role = aws_iam_role.lambda-registros.id
 
   policy = <<EOF
 {
@@ -33,13 +33,18 @@ resource "aws_iam_role_policy" "lambda_exec_policy" {
             "Action": "dynamodb:*",
             "Effect": "Allow",
             "Resource": "*"
+        },
+        {
+            "Action": "sns:*",
+            "Effect": "Allow",
+            "Resource": "*"
         }     
       ]  
 }  
 EOF
 }
 
-resource "aws_iam_role" "example" {
+resource "aws_iam_role" "lambda-registros" {
   name = "example"
   
   assume_role_policy = jsonencode({
@@ -56,9 +61,9 @@ resource "aws_iam_role" "example" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "example" {
+resource "aws_iam_role_policy_attachment" "lambda-registros" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-  role       = aws_iam_role.example.name
+  role       = aws_iam_role.lambda-registros.name
 }
 
 
