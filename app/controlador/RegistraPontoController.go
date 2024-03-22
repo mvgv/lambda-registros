@@ -1,7 +1,6 @@
 package controlador
 
 import (
-	"github.com/mvgv/lambda-registros/app/apresentacao"
 	"github.com/mvgv/lambda-registros/app/casodeuso"
 )
 
@@ -18,6 +17,11 @@ func NewRegistraPontoController(cadastrarPontoUC casodeuso.CadastrarPonto,
 	}
 }
 
-func (r *RegistraPontoController) Handle(apresentacao.PontoRequisicao) (string, error) {
-	return "", nil
+func (r *RegistraPontoController) Handle(email, timestamp, evento string) (string, error) {
+
+	timestamp, err := r.cadastrarPontoUC.CadastrarPontoDoDia(email, timestamp, evento)
+	if err != nil {
+		return "", err
+	}
+	return timestamp, nil
 }

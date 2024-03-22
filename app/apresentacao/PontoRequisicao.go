@@ -1,13 +1,13 @@
 package apresentacao
 
 type PontoRequisicao struct {
-	Email     string `json:"email"`
-	Timestamp string `json:"timestamp"`
+	Email  string `json:"email"`
+	Evento string `json:"evento"`
 }
 
-func NewPontoRequisicao(email, timestamp string) *PontoRequisicao {
+func NewPontoRequisicao(email, evento string) *PontoRequisicao {
 	return &PontoRequisicao{
-		Email:     email,
-		Timestamp: timestamp,
+		Email:  email,
+		Evento: evento,
 	}
 }

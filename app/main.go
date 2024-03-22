@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -25,16 +26,23 @@ type Response struct {
 func RegistrarPontoHandler(ctx context.Context, req events.APIGatewayProxyRequest,
 	cadastrarPontoUC casodeuso.CadastrarPonto,
 	consultaClienteUC casodeuso.ConsultarCliente) (events.APIGatewayProxyResponse, error) {
+
 	var pontoDTO apresentacao.PontoRequisicao
 	// TODO: Implementar a lógica de criação de cliente
 	controller := controlador.NewRegistraPontoController(cadastrarPontoUC, consultaClienteUC)
 	log.Printf("req.Body: %s\n", req.Body)
 
 	err := json.Unmarshal([]byte(req.Body), &pontoDTO)
-	respBody, err := controller.Handle(pontoDTO)
+	if err != nil {
+		return events.APIGatewayProxyResponse{}, fmt.Errorf("failed to unmarshal request: %v", err)
+	}
+	timestampRegistrado, err := controller.Handle(pontoDTO.Email, time.Now().Format("2006-01-02T15:04:05"), pontoDTO.Evento)
 	if err != nil {
 		return events.APIGatewayProxyResponse{}, fmt.Errorf("failed to handle request: %v", err)
 	}
+
+	saidaPonto := apresentacao.NewPontoRespostaRequisicao(timestampRegistrado)
+	respBody, _ := json.Marshal(saidaPonto)
 
 	return events.APIGatewayProxyResponse{
 		StatusCode: http.StatusOK,

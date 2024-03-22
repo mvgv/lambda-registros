@@ -1,7 +1,6 @@
 package casodeuso
 
 import (
-	"github.com/mvgv/lambda-registros/app/dominio"
 	"github.com/mvgv/lambda-registros/app/infraestrutura/repositorio"
 )
 
@@ -15,7 +14,7 @@ func NewCadastrarPontoImpl(pontoRepo repositorio.PontoRepositorio) *CadastrarPon
 	}
 }
 
-func (c *CadastrarPontoImpl) CadastrarPontoDoDia(ponto dominio.Ponto, email string) (string, error) {
+func (c *CadastrarPontoImpl) CadastrarPontoDoDia(email, timestamp, evento string) (string, error) {
 
 	/*registrosDoDia, err := c.pontoRepo.ConsultarPontoDoDia(email)
 	if err != nil {
@@ -31,6 +30,9 @@ func (c *CadastrarPontoImpl) CadastrarPontoDoDia(ponto dominio.Ponto, email stri
 
 	pontoDoDia := *dominio.NewPontoDoDia(email, pontos)*/
 
-	c.pontoRepo.RegistrarPonto(email, ponto.Tipo, email)
-	return "", nil
+	err := c.pontoRepo.RegistrarPonto(email, timestamp, evento)
+	if err != nil {
+		return "", err
+	}
+	return timestamp, nil
 }
