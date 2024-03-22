@@ -39,6 +39,7 @@ jobs:
         GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bootstrap main.go  # Compilar seu código Go
         echo "GitHub Workspace: $GITHUB_WORKSPACE"
         mkdir $GITHUB_WORKSPACE/lambda
+        ls -la
         cp bootstrap $GITHUB_WORKSPACE/lambda  # Copiar o arquivo binário para a pasta "app"
 
     - name: Upload Artifact
