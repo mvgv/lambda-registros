@@ -44,8 +44,8 @@ resource "aws_iam_role_policy" "lambda_exec_policy" {
 EOF
 }
 
-resource "aws_iam_role" "lambda-registros" {
-  name = "example"
+resource "aws_iam_role" "lambda-registro" {
+  name = "lambda-registro"
   
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
