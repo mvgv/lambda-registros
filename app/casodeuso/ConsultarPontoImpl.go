@@ -21,12 +21,11 @@ func (c *ConsultarPontoImpl) ConsultarPontoDoDia(email string) (*dominio.PontoDo
 	if err != nil {
 		return nil, err
 	}
-	ponto := make([]dominio.Ponto, len(registrosDoDia))
-	for i, registro := range registrosDoDia {
-		ponto[i] = *dominio.NewPonto(string(registro[i][i]), string(registro[i][i]))
+	ponto := make([]dominio.Ponto, len(registrosDoDia.Registros))
+	for i, registro := range registrosDoDia.Registros {
+		ponto[i] = *dominio.NewPonto(registro.Timestamp, registro.Evento)
 	}
 	pontoDodia := dominio.NewPontoDoDia(email, ponto)
 
 	return pontoDodia, nil
-
 }

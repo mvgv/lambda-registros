@@ -17,11 +17,11 @@ func NewRegistraPontoController(cadastrarPontoUC casodeuso.CadastrarPonto,
 	}
 }
 
-func (r *RegistraPontoController) Handle(email, timestamp, evento string) (string, error) {
+func (r *RegistraPontoController) Handle(email, timestamp, evento string) (string, string, error) {
 
-	timestamp, err := r.cadastrarPontoUC.CadastrarPontoDoDia(email, timestamp, evento)
+	timestamp, evento, err := r.cadastrarPontoUC.CadastrarPontoDoDia(email, timestamp, evento)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	return timestamp, nil
+	return timestamp, evento, nil
 }

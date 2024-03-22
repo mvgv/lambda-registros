@@ -1,11 +1,13 @@
 package apresentacao
 
 type PontoRespostaRequisicao struct {
-	Ponto string `json:"ponto"`
+	Ponto  string `json:"ponto"`
+	Evento string `json:"evento"`
 }
 
-func NewPontoRespostaRequisicao(ponto string) *PontoRespostaRequisicao {
+func NewPontoRespostaRequisicao(ponto, evento string) *PontoRespostaRequisicao {
 	return &PontoRespostaRequisicao{
-		Ponto: ponto,
+		Ponto:  ponto,
+		Evento: evento,
 	}
 }

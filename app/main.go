@@ -36,12 +36,12 @@ func RegistrarPontoHandler(ctx context.Context, req events.APIGatewayProxyReques
 	if err != nil {
 		return events.APIGatewayProxyResponse{}, fmt.Errorf("failed to unmarshal request: %v", err)
 	}
-	timestampRegistrado, err := controller.Handle(pontoDTO.Email, time.Now().Format("2006-01-02T15:04:05"), pontoDTO.Evento)
+	timestampRegistrado, evento, err := controller.Handle(pontoDTO.Email, time.Now().Format("2006-01-02T15:04:05"), pontoDTO.Evento)
 	if err != nil {
 		return events.APIGatewayProxyResponse{}, fmt.Errorf("failed to handle request: %v", err)
 	}
 
-	saidaPonto := apresentacao.NewPontoRespostaRequisicao(timestampRegistrado)
+	saidaPonto := apresentacao.NewPontoRespostaRequisicao(timestampRegistrado, evento)
 	respBody, _ := json.Marshal(saidaPonto)
 
 	return events.APIGatewayProxyResponse{
@@ -53,33 +53,28 @@ func RegistrarPontoHandler(ctx context.Context, req events.APIGatewayProxyReques
 func RelatorioHandler(ctx context.Context, req events.APIGatewayProxyRequest,
 	relatorioPontoUC casodeuso.GerarRelatorio,
 	consultarClienteUC casodeuso.ConsultarCliente) (events.APIGatewayProxyResponse, error) {
-	/*
-	   controller := controladores.NewConsultaClienteController(consultarClienteUC)
-	   respBody, err := controller.Handle(req.PathParameters["id_funcionario"])
+	var pontoDto apresentacao.PontoRequisicao
+	controller := controlador.NewGeraRelatorioController(relatorioPontoUC)
+	err := json.Unmarshal([]byte(req.Body), &pontoDto)
+	respBody, err := controller.Handle(pontoDto.Email)
+	if err != nil {
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusNotFound, Body: "mensagem: Funcionario não encontrado"}, fmt.Errorf("failed to handle request: %v", err)
+	}
 
-	   	if err != nil {
-	   		return events.APIGatewayProxyResponse{StatusCode: http.StatusNotFound, Body: "mensagem: Funcionario não encontrado"}, fmt.Errorf("failed to handle request: %v", err)
-	   	}
+	returnJson, _ := json.Marshal(apresentacao.NewMensagemRelatorio(respBody))
 
-	   returnJson, _ := json.Marshal(apresentacao.NewClienteDTO(respBody.Email,
-
-	   	"", respBody.Status))
-
-	   	return events.APIGatewayProxyResponse{
-	   		StatusCode: http.StatusOK,
-	   		Body:       string(returnJson),
-	   	}, nil
-	*/
 	return events.APIGatewayProxyResponse{
 		StatusCode: http.StatusOK,
-		Body:       string("respBody"),
+		Body:       string(returnJson),
 	}, nil
+
 }
 
 func ConsultaPontoHandler(ctx context.Context, req events.APIGatewayProxyRequest,
 	consultarPontoUC casodeuso.ConsultarPonto,
-	consultaClienteUC casodeuso.ConsultarCliente) (events.APIGatewayProxyResponse, error) {
-	controller := controlador.NewConsultaPontoController(consultaClienteUC, consultarPontoUC)
+	consultaClienteUC casodeuso.ConsultarCliente,
+	calcularHorasTrabalhadasUC casodeuso.CalcularHorasTrabalhadas) (events.APIGatewayProxyResponse, error) {
+	controller := controlador.NewConsultaPontoController(consultaClienteUC, consultarPontoUC, calcularHorasTrabalhadasUC)
 	respBody, err := controller.Handle(req.PathParameters["id_funcionario"])
 
 	if err != nil {
@@ -97,7 +92,8 @@ func ConsultaPontoHandler(ctx context.Context, req events.APIGatewayProxyRequest
 
 func Handler(ctx context.Context, req events.APIGatewayProxyRequest,
 	cadastrarPontoUC casodeuso.CadastrarPonto, consultarPontoUC casodeuso.ConsultarPonto,
-	relatorioPontoUC casodeuso.GerarRelatorio, consultaClienteUC casodeuso.ConsultarCliente) (events.APIGatewayProxyResponse, error) {
+	relatorioPontoUC casodeuso.GerarRelatorio, consultaClienteUC casodeuso.ConsultarCliente,
+	caclularHorasTrabalhadasUC casodeuso.CalcularHorasTrabalhadas) (events.APIGatewayProxyResponse, error) {
 
 	log.Printf("req.Path: %s\n", req.Path)
 	switch req.HTTPMethod {
@@ -108,7 +104,7 @@ func Handler(ctx context.Context, req events.APIGatewayProxyRequest,
 			return RelatorioHandler(ctx, req, relatorioPontoUC, consultaClienteUC)
 		}
 	case "GET":
-		return ConsultaPontoHandler(ctx, req, consultarPontoUC, consultaClienteUC)
+		return ConsultaPontoHandler(ctx, req, consultarPontoUC, consultaClienteUC, caclularHorasTrabalhadasUC)
 	}
 	return events.APIGatewayProxyResponse{
 		StatusCode: http.StatusNotFound,
@@ -120,6 +116,8 @@ func main() {
 	clienteService := servicos.NewServicoClienteImpl()             //falta implementar
 	pontoRepository := repositorio.NewPontoRepositorioDynamoImpl() //falta implementar
 	messageSNS := mensagens.NewProdutorSNSImpl()                   //falta implementar
+
+	calculaHorasTrabalhadasUC := casodeuso.NewCalcularHorasTrabalhadasImpl()
 
 	consultarClienteUC := casodeuso.NewConsultarClienteImpl(clienteService) //falta implementar
 	cadastrarPontoUC := casodeuso.NewCadastrarPontoImpl(pontoRepository)    //falta implementar
@@ -138,7 +136,7 @@ func main() {
 			return nil, fmt.Errorf("event type not supported")
 		}
 		fmt.Printf("proxyRequest: %v\n", proxyRequestObj)
-		return Handler(ctx, proxyRequestObj, cadastrarPontoUC, consultarPontoUC, relatorioPontoUC, consultarClienteUC)
+		return Handler(ctx, proxyRequestObj, cadastrarPontoUC, consultarPontoUC, relatorioPontoUC, consultarClienteUC, calculaHorasTrabalhadasUC)
 
 	})
 

@@ -14,7 +14,7 @@ func NewCadastrarPontoImpl(pontoRepo repositorio.PontoRepositorio) *CadastrarPon
 	}
 }
 
-func (c *CadastrarPontoImpl) CadastrarPontoDoDia(email, timestamp, evento string) (string, error) {
+func (c *CadastrarPontoImpl) CadastrarPontoDoDia(email, timestamp, evento string) (string, string, error) {
 
 	/*registrosDoDia, err := c.pontoRepo.ConsultarPontoDoDia(email)
 	if err != nil {
@@ -32,7 +32,7 @@ func (c *CadastrarPontoImpl) CadastrarPontoDoDia(email, timestamp, evento string
 
 	err := c.pontoRepo.RegistrarPonto(email, timestamp, evento)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	return timestamp, nil
+	return timestamp, evento, nil
 }

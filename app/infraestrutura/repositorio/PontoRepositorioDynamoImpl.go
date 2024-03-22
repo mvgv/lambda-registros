@@ -40,7 +40,7 @@ func (p *PontoRepositorioDynamoImpl) RegistrarPonto(email string, timestamp stri
 	return nil
 }
 
-func (p *PontoRepositorioDynamoImpl) ConsultarPontoDoDia(email string) ([][]string, error) {
+func (p *PontoRepositorioDynamoImpl) ConsultarPontoDoDia(email string) (*dto.PontoDoDiaEntidade, error) {
 	hojeInicio := time.Now().Format("2006-01-02") + "T00:00:00"
 	hojeFim := time.Now().Format("2006-01-02") + "T23:59:59"
 
@@ -74,20 +74,14 @@ func (p *PontoRepositorioDynamoImpl) ConsultarPontoDoDia(email string) ([][]stri
 		return nil, err
 	}
 
-	pontoDodia := &dto.PontoDoDiaEntidade{}
-	err = dynamodbattribute.UnmarshalMap(result.Items[0], pontoDodia)
-	if err != nil {
-		return nil, err
+	registros := make([]dto.PontoEntidade, len(result.Items))
+
+	for i, item := range result.Items {
+		registros[i] = *dto.NewPontoEntidade(*item["email"].S, *item["timestamp"].S, *item["evento"].S)
 	}
 
-	fmt.Println(pontoDodia)
-	registros := make([][]string, len(pontoDodia.Registros))
-	for i, registro := range pontoDodia.Registros {
-		registros[i] = []string{registro.Timestamp, registro.Evento}
-	}
-
-	fmt.Println(registros)
-
-	return registros, nil
+	pontoDodia := dto.NewPontoDoDiaEntidade(*result.Items[0]["email"].S, registros)
+	fmt.Println("Ponto do dia: ", pontoDodia)
+	return pontoDodia, nil
 
 }
