@@ -16,5 +16,17 @@ func NewConsultarPontoImpl(repositorio repositorio.PontoRepositorio) *ConsultarP
 }
 
 func (c *ConsultarPontoImpl) ConsultarPontoDoDia(email string) (*dominio.PontoDoDia, error) {
-	return nil, nil
+
+	registrosDoDia, err := c.repositorio.ConsultarPontoDoDia(email)
+	if err != nil {
+		return nil, err
+	}
+	ponto := make([]dominio.Ponto, len(registrosDoDia))
+	for i, registro := range registrosDoDia {
+		ponto[i] = *dominio.NewPonto(string(registro[i][i]), string(registro[i][i]))
+	}
+	pontoDodia := dominio.NewPontoDoDia(email, ponto)
+
+	return pontoDodia, nil
+
 }

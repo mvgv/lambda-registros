@@ -1,6 +1,9 @@
 package repositorio
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -38,31 +41,52 @@ func (p *PontoRepositorioDynamoImpl) RegistrarPonto(email string, timestamp stri
 }
 
 func (p *PontoRepositorioDynamoImpl) ConsultarPontoDoDia(email string) ([][]string, error) {
-	input := &dynamodb.GetItemInput{
-		Key: map[string]*dynamodb.AttributeValue{
-			"Email": {
-				S: aws.String(email),
+	hojeInicio := time.Now().Format("2006-01-02") + "T00:00:00"
+	hojeFim := time.Now().Format("2006-01-02") + "T23:59:59"
+
+	input := &dynamodb.QueryInput{
+		TableName: aws.String("RegistrosPonto"),
+		KeyConditions: map[string]*dynamodb.Condition{
+			"email": {
+				ComparisonOperator: aws.String("EQ"),
+				AttributeValueList: []*dynamodb.AttributeValue{
+					{
+						S: aws.String(email),
+					},
+				},
+			},
+			"timestamp": {
+				ComparisonOperator: aws.String("BETWEEN"),
+				AttributeValueList: []*dynamodb.AttributeValue{
+					{
+						S: aws.String(hojeInicio),
+					},
+					{
+						S: aws.String(hojeFim),
+					},
+				},
 			},
 		},
-		TableName: aws.String("RegistrosPonto"),
 	}
-	result, err := p.svc.GetItem(input)
-	if err != nil {
-		return nil, err
-	}
-	if result.Item == nil {
-		return nil, nil
-	}
-	pontoDodia := &dto.PontoDoDiaEntidade{}
-	err = dynamodbattribute.UnmarshalMap(result.Item, pontoDodia)
+
+	result, err := p.svc.Query(input)
 	if err != nil {
 		return nil, err
 	}
 
+	pontoDodia := &dto.PontoDoDiaEntidade{}
+	err = dynamodbattribute.UnmarshalMap(result.Items[0], pontoDodia)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(pontoDodia)
 	registros := make([][]string, len(pontoDodia.Registros))
 	for i, registro := range pontoDodia.Registros {
 		registros[i] = []string{registro.Timestamp, registro.Evento}
 	}
+
+	fmt.Println(registros)
 
 	return registros, nil
 

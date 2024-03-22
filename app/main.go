@@ -79,27 +79,20 @@ func RelatorioHandler(ctx context.Context, req events.APIGatewayProxyRequest,
 func ConsultaPontoHandler(ctx context.Context, req events.APIGatewayProxyRequest,
 	consultarPontoUC casodeuso.ConsultarPonto,
 	consultaClienteUC casodeuso.ConsultarCliente) (events.APIGatewayProxyResponse, error) {
-	/*
-	   controller := controladores.NewConsultaClienteController(consultarClienteUC)
-	   respBody, err := controller.Handle(req.PathParameters["id_funcionario"])
+	controller := controlador.NewConsultaPontoController(consultaClienteUC, consultarPontoUC)
+	respBody, err := controller.Handle(req.PathParameters["id_funcionario"])
 
-	   	if err != nil {
-	   		return events.APIGatewayProxyResponse{StatusCode: http.StatusNotFound, Body: "mensagem: Funcionario não encontrado"}, fmt.Errorf("failed to handle request: %v", err)
-	   	}
+	if err != nil {
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusNotFound, Body: "mensagem: Funcionario não encontrado"}, fmt.Errorf("failed to handle request: %v", err)
+	}
 
-	   returnJson, _ := json.Marshal(apresentacao.NewClienteDTO(respBody.Email,
+	returnJson, _ := json.Marshal(respBody)
 
-	   	"", respBody.Status))
-
-	   	return events.APIGatewayProxyResponse{
-	   		StatusCode: http.StatusOK,
-	   		Body:       string(returnJson),
-	   	}, nil
-	*/
 	return events.APIGatewayProxyResponse{
 		StatusCode: http.StatusOK,
-		Body:       string("respBody"),
+		Body:       string(returnJson),
 	}, nil
+
 }
 
 func Handler(ctx context.Context, req events.APIGatewayProxyRequest,
