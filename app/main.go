@@ -29,6 +29,11 @@ func RegistrarPontoHandler(ctx context.Context, req events.APIGatewayProxyReques
 
 	var pontoDTO apresentacao.PontoRequisicao
 	// TODO: Implementar a lógica de criação de cliente
+	autorizador := apresentacao.NewValidaToken()
+	permitido, _ := autorizador.AutorizarCliente(req.Headers["Authorization"], req.PathParameters["id_funcionario"])
+	if !permitido {
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusUnauthorized, Body: "mensagem: Usuário não autorizado"}, nil
+	}
 	controller := controlador.NewRegistraPontoController(cadastrarPontoUC, consultaClienteUC)
 	log.Printf("req.Body: %s\n", req.Body)
 
@@ -54,8 +59,20 @@ func RelatorioHandler(ctx context.Context, req events.APIGatewayProxyRequest,
 	relatorioPontoUC casodeuso.GerarRelatorio,
 	consultarClienteUC casodeuso.ConsultarCliente) (events.APIGatewayProxyResponse, error) {
 	var pontoDto apresentacao.PontoRequisicao
+
 	controller := controlador.NewGeraRelatorioController(relatorioPontoUC)
 	err := json.Unmarshal([]byte(req.Body), &pontoDto)
+
+	if err != nil {
+		return events.APIGatewayProxyResponse{}, fmt.Errorf("failed to unmarshal request: %v", err)
+	}
+
+	autorizador := apresentacao.NewValidaToken()
+	permitido, _ := autorizador.AutorizarCliente(req.Headers["Authorization"], pontoDto.Email)
+
+	if !permitido {
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusUnauthorized, Body: "mensagem: Usuário não autorizado"}, nil
+	}
 	respBody, err := controller.Handle(pontoDto.Email)
 	if err != nil {
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusNotFound, Body: "mensagem: Funcionario não encontrado"}, fmt.Errorf("failed to handle request: %v", err)
@@ -75,6 +92,13 @@ func ConsultaPontoHandler(ctx context.Context, req events.APIGatewayProxyRequest
 	consultaClienteUC casodeuso.ConsultarCliente,
 	calcularHorasTrabalhadasUC casodeuso.CalcularHorasTrabalhadas) (events.APIGatewayProxyResponse, error) {
 	controller := controlador.NewConsultaPontoController(consultaClienteUC, consultarPontoUC, calcularHorasTrabalhadasUC)
+
+	autorizador := apresentacao.NewValidaToken()
+	permitido, _ := autorizador.AutorizarCliente(req.Headers["Authorization"], req.PathParameters["id_funcionario"])
+	if !permitido {
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusUnauthorized, Body: "mensagem: Usuário não autorizado"}, nil
+	}
+
 	respBody, err := controller.Handle(req.PathParameters["id_funcionario"])
 
 	if err != nil {
